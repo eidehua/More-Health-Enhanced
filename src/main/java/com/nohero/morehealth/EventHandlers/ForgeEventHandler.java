@@ -75,6 +75,12 @@ public class ForgeEventHandler {
 
 	private void calculateHeartChange(EntityPlayer player, PlayerStats stats) {
 
+		if(player.getMaxHealth()+2>mod_moreHealthEnhanced.MaxHearts*2) //check- in this case, don't continue adding to max health
+		{
+			//CASE: player gets more health through heart container system, so RPG system doesn't exceed the cap
+			return;
+
+		}
 		if(levelIncreased(player, stats))
 		{
 			/*

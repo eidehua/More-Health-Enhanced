@@ -4,6 +4,7 @@ package com.nohero.morehealth;
 import com.nohero.morehealth.EventHandlers.ForgeEventHandler;
 import com.nohero.morehealth.EventHandlers.PlayerHandler;
 import com.nohero.morehealth.GUI.MoreHealthHUD;
+import com.nohero.morehealth.Items.ItemCursedHeart;
 import com.nohero.morehealth.Items.ItemHeart;
 import com.nohero.morehealth.Items.ItemHeartPiece;
 import cpw.mods.fml.client.FMLClientHandler;
@@ -25,11 +26,13 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 
-@Mod(modid = mod_moreHealthEnhanced.modid, name = "More Health Forge", version = "5.5")
+@Mod(modid = mod_moreHealthEnhanced.modid, name = mod_moreHealthEnhanced.name, version = mod_moreHealthEnhanced.version)
 public class mod_moreHealthEnhanced{
 	
 	public static final String modid = "morehealth";
-	
+	public static final String name = "More Health Forge";
+	public static final String version = "5.6";
+
 	public static final String guiOptions="GUI Options";
 	
 	public static int[] LevelRampInt;
@@ -46,6 +49,7 @@ public class mod_moreHealthEnhanced{
 	
 	public static Item heartContainer;
 	private static Item heartPiece;
+	private static Item cursedHeart;
 
 	private static double multiply =1.0;
 	public static boolean hcMode=false; 
@@ -146,9 +150,12 @@ public class mod_moreHealthEnhanced{
 		if (HeartContainersAndPieces == true) {
 			heartContainer = new ItemHeart();
 			heartPiece = new ItemHeartPiece();
+			cursedHeart = new ItemCursedHeart();
 
 			GameRegistry.registerItem(heartContainer, "heartContainer");
 			GameRegistry.registerItem(heartPiece, "heartPiece");
+			GameRegistry.registerItem(cursedHeart, "cursedHeart");
+
 			GameRegistry.addRecipe(new ItemStack(heartContainer, 1), new Object[] {
 					"XX", "XX", Character.valueOf('X'), heartPiece });
 
