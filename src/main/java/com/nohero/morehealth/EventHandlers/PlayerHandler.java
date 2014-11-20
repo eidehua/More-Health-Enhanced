@@ -48,7 +48,9 @@ public class PlayerHandler {
 		//System.out.println("stat: "+ healthModifier);
 		//adds player stats to hash map
 		stats.player = player;
+		stats.justLoggedIn = true;
 		playerStats.put(player.getCommandSenderName(), stats);
+
 	}
 
 	public static void addHealthModifier(EntityPlayer player, double healthModifier) {

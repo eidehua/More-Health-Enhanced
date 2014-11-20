@@ -63,8 +63,15 @@ public class ForgeEventHandler {
 				//update the client side on a dimension change
 				PlayerHandlerHelper.savePlayerData(player, false);
 				PlayerHandlerHelper.updatePlayerData(player);
-				//player.setHealth(player.getMaxHealth()); changing dim shouldn't give ppl full health
+				player.setHealth(player.getHealth());
 				stats.needClientSideHealthUpdate = false;
+				if(stats.justLoggedIn && stats.loggedOutHealth !=0){
+					//sets up the client side for a player that just logged in (and after loggedOutHealth is grabbed from NBT)
+					//if player doesn't have loggedOutHealth in nbt, it's fine since we don't have to deal with that player's health
+					player.setHealth(stats.loggedOutHealth);
+					stats.justLoggedIn = false;
+
+				}
 				//System.out.println("HO");
 			}
 			/**main logic for rpg heart gain.**/
@@ -95,8 +102,12 @@ public class ForgeEventHandler {
 		if(stats.needClientSideHealthUpdate){ //prevents race conditions of server thread and client thread.
 			//wait for client side to update before calculating new armor health changes
 			//System.out.println("client update");
-			return;
+			//return;
 		}
+		if(stats.loggedOutHealth == 0){
+			return; //wait for player to be set up
+		}
+		int armorHealth = 0;
 		for(int i = 1; i <=4; i++){
 			ItemStack currentArmor = player.getEquipmentInSlot(i);
 			ItemStack oldArmor = stats.oldArmorSet[i-1]; //equipmentinslot 1-4 corrspond with oldArmorset 0-3
@@ -133,10 +144,13 @@ public class ForgeEventHandler {
 				if(extraHearts>0) {
 					int extraHealth = extraHearts *2;
 					PlayerHandler.addHealthModifier(player, currentMaxHealthMod+extraHealth); //changes the health modifier to this new one
-					player.addChatComponentMessage(new ChatComponentText("Equipping the armor binds an extra " + extraHearts + " enchanted hearts to your soul."));
+					if(!stats.justLoggedIn) {
+						player.addChatComponentMessage(new ChatComponentText("Equipping the armor binds an extra " + extraHearts + " enchanted hearts to your soul."));
+					}
 					//System.out.println(currentMaxHealthMod+","+extraHealth);
 					//player.addChatComponentMessage(new ChatComponentText("You now have "+ player.getMaxHealth()));
 					stats.needClientSideHealthUpdate = true;
+					armorHealth += extraHealth;
 				}
 			}
 			else{
@@ -164,6 +178,15 @@ public class ForgeEventHandler {
 		//after checking the armor pieces, if the player net lost health, his max health is updated but his current health is not
 		if(player.getHealth()>player.getMaxHealth()){
 			player.setHealth(player.getMaxHealth());
+		}
+		//If player just logged in
+		if(stats.justLoggedIn){
+			//stats.justLoggedIn = false;
+			//if a player just logged in, set health equal to his loggedOutHealth
+			//System.out.println(armorHealth);
+			//System.out.println(stats.loggedOutHealth);
+			player.setHealth(stats.loggedOutHealth);
+			stats.needClientSideHealthUpdate = true;
 		}
 	}
 

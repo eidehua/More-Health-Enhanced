@@ -18,6 +18,8 @@ public class PlayerStats {
 	public EntityPlayer player; //the player we are referring to
 	public boolean needClientSideHealthUpdate = false;
 	public ItemStack[] oldArmorSet = new ItemStack[4];	//the armor equipped on user when stats are saved
+	public boolean justLoggedIn;
+	public float loggedOutHealth;
 
 	public static PlayerStats getPlayerStats(String username) {
 		// TODO Auto-generated method stub

@@ -2,10 +2,12 @@ package com.nohero.morehealth.EventHandlers;
 
 import com.nohero.morehealth.PlayerStats;
 import com.nohero.morehealth.mod_moreHealthEnhanced;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ChatComponentText;
@@ -223,6 +225,30 @@ public class PlayerHandlerHelper {
 			//System.out.println("Mod: "+ stats.healthmod);
 			//System.out.println(moreHealthTag.getDouble("healthModifier"));
 			if (loggedOut) {
+				//Remove health bonus from armor
+				//On log in, stats.oldArmorSet will be an array of nulls even if armor is equipped
+				//thus there will be extra hearts added (an extra set based on armor hearts)
+				double currentMaxHealthMod = 0;
+				try{
+					currentMaxHealthMod=player.getEntityAttribute(SharedMonsterAttributes.maxHealth).getModifier(PlayerHandler.moreHealthID).getAmount();
+				}
+				catch (Exception e) {
+					//don't do enchantment changes until player is loaded in
+					return;
+				}
+				for(int i = 0; i < 4; i++){
+					ItemStack currArmor = stats.oldArmorSet[i];
+					int extraHearts = EnchantmentHelper.getEnchantmentLevel(mod_moreHealthEnhanced.heartArmorEnchantID, currArmor);
+					//1 heart = 2 health.
+					if(extraHearts>0) {
+						int extraHealth = extraHearts * 2;
+						//add (-)extraHealth (aka subtract)
+						currentMaxHealthMod -= extraHealth;
+					}
+				}
+				//PlayerHandler.addHealthModifier(player, currentMaxHealthMod);
+				moreHealthTag.setDouble("healthModifier", currentMaxHealthMod);	//store the healthModifier change
+				moreHealthTag.setFloat("loggedOutHealth", player.getHealth());
 				PlayerHandler.playerStats.remove(player.getCommandSenderName());
 			}
 		}
@@ -258,6 +284,7 @@ public class PlayerHandlerHelper {
 		stats.count=moreHealthTag.getInteger("count");
 		stats.previousLevel=moreHealthTag.getInteger("previousLevel");
 		stats.healthmod=moreHealthTag.getDouble("healthModifier");
+		stats.loggedOutHealth = moreHealthTag.getFloat("loggedOutHealth"); //tag used to keep track of a player health on log out
 		//System.out.println(moreHealthTag.getDouble("healthModifier"));
 	}
 }
