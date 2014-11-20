@@ -1,6 +1,7 @@
 package com.nohero.morehealth;
 
 
+import com.nohero.morehealth.Enchantments.ArmorHealthEnchantment;
 import com.nohero.morehealth.EventHandlers.ForgeEventHandler;
 import com.nohero.morehealth.EventHandlers.PlayerHandler;
 import com.nohero.morehealth.GUI.MoreHealthHUD;
@@ -17,6 +18,7 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
 import net.minecraft.client.Minecraft;
+import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -31,7 +33,7 @@ public class mod_moreHealthEnhanced{
 	
 	public static final String modid = "morehealth";
 	public static final String name = "More Health Forge";
-	public static final String version = "5.6";
+	public static final String version = "6.0";
 
 	public static final String guiOptions="GUI Options";
 	
@@ -46,7 +48,9 @@ public class mod_moreHealthEnhanced{
 	public static boolean HeartContainersAndPieces = true;
 
 	public static boolean RpgMode = true;
-	
+
+	public static boolean Enchantments = true;
+
 	public static Item heartContainer;
 	private static Item heartPiece;
 	private static Item cursedHeart;
@@ -65,15 +69,22 @@ public class mod_moreHealthEnhanced{
 	private static Property rpg;
 	private static Property multiplier;
 	private static Property hardcore;
+	private static Property enchantment;
 	private static Property customGui;
 	private static Property minimalGui;
+	private static Property armorEnchantmentID;
 
 	public static AttributeModifier healthMod;
+
+	public static int heartArmorEnchantID=120; //the enchantment ID for hearts -- should be configurable
+	//(ID, weight)
+	//weight from 1-10, 1 being rare, 10 being more common
+	//Adds my enchantment to the possible enchantments list
+	public static Enchantment armorEnchantment = null;
 
 	@EventHandler
 	public void  preInit(FMLPreInitializationEvent event) {
 		//Minecraft mc = FMLClientHandler.instance().getClient();
-
 		setUpConfig(event);
 	}
 
@@ -110,12 +121,17 @@ public class mod_moreHealthEnhanced{
 		hardcore.comment="Set to true to enable hardcore mode. After death, you restart back at your starting hearts value.";
 		// saving the configuration to its file
 
+		enchantment = config.get(Configuration.CATEGORY_GENERAL, "Enchantments", true);
+		enchantment.comment = "Set false to remove the heart enchantment for armors";
+
 		customGui= config.get(guiOptions, "More Health HUD", true);
 		customGui.comment="By default, more health will customize the HUD so that heart rows are possible. Set this to false AND set minimal HUD to false if it is conflicting with one of your HUD/GUI mods that have their own heart HUD.";
 
 		minimalGui=config.get(guiOptions, "Minimal HUD", true);
 		minimalGui.comment="Set to true to enable minimal gui. Displays heart information in one row. A number should appear next to your hearts telling you what row you are on. Row 1= Hearts 1-10. Row 2=Hearts 11-20. Turn this on if there is a conflict with other HUD/GUI mods that DO NOT have their own heart HUD";
 
+		armorEnchantmentID=config.get(Configuration.CATEGORY_GENERAL, "Armor Enchantments ID", 120);
+		armorEnchantmentID.comment="Adjust the Armor Enchants ID in case of a conflict with other custom enchantments";
 		config.save();
 	}
 
@@ -135,7 +151,7 @@ public class mod_moreHealthEnhanced{
 			renderCustomGUI=true; //makes sure this is set to true. It's still a custom gui, but a minimal one. 
 		}
 
-		if (RpgMode == false) {
+		if (RpgMode) {
 			LevelRampInt = new int[1];
 			LevelRampInt[0] = -1; // stops RPG element
 
@@ -147,7 +163,7 @@ public class mod_moreHealthEnhanced{
 						.println("There is a error in your config file. Make sure there is no extra ',' in the line for Ramp. ");
 			}
 		}
-		if (HeartContainersAndPieces == true) {
+		if (HeartContainersAndPieces) {
 			heartContainer = new ItemHeart();
 			heartPiece = new ItemHeartPiece();
 			cursedHeart = new ItemCursedHeart();
@@ -160,6 +176,9 @@ public class mod_moreHealthEnhanced{
 					"XX", "XX", Character.valueOf('X'), heartPiece });
 
 			addChestLoot();
+		}
+		if(Enchantments){ //what happens to users who had enchanted items then turn off enchantments?
+			armorEnchantment= new ArmorHealthEnchantment(heartArmorEnchantID, 4);
 		}
 	}
 
@@ -175,8 +194,10 @@ public class mod_moreHealthEnhanced{
 		RpgMode=rpg.getBoolean(true);
 		multiply=multiplier.getDouble(1.0); //multiplier for loot gen.
 		hcMode=hardcore.getBoolean(false);
+		Enchantments = enchantment.getBoolean(true);
 		renderCustomGUI=customGui.getBoolean(true);//default heart gui.
 		minimalisticGUI=minimalGui.getBoolean(true); //minimal gui set on default
+		heartArmorEnchantID=armorEnchantmentID.getInt();
 	}
 
 	private void addChestLoot() {

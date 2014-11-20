@@ -94,7 +94,7 @@ public class PlayerHandler {
 		//changing dimension requires not only a save, but an update-- updates the health modifier, then applies it
 		PlayerHandlerHelper.updatePlayerData(currentPlayer);
 		//System.out.println("Max Health: "+currentPlayer.getMaxHealth());
-		currentPlayer.setHealth(currentPlayer.getMaxHealth());
+		//currentPlayer.setHealth(currentPlayer.getMaxHealth());
 
 		//set variable true so during OnLivingUpdate the user is forced to update the client side health
 		PlayerStats stats = PlayerStats.getPlayerStats(currentPlayer.getCommandSenderName());
