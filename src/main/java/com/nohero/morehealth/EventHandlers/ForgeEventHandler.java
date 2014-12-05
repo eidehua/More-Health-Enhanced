@@ -75,7 +75,7 @@ public class ForgeEventHandler {
 				//System.out.println("HO");
 			}
 			/**main logic for rpg heart gain.**/
-			if(mod_moreHealthEnhanced.RpgMode==true){
+			if(mod_moreHealthEnhanced.RpgMode){
 				calculateHeartChange(player, stats);
 			}
 

@@ -79,7 +79,7 @@ public class PlayerHandlerHelper {
 		{
 			if(addHealth>mod_moreHealthEnhanced.MaxHearts*2) //check
 			addHealth=mod_moreHealthEnhanced.MaxHearts*2;
-			}
+		}
 		moreHealthTag.setInteger("hpmax", stats.hpmax);
 
 
@@ -118,7 +118,7 @@ public class PlayerHandlerHelper {
 		moreHealthTag.setInteger("count", stats.count);
 		//saves potentially updated count
 		try{
-		stats.healthmod=player.getEntityAttribute(SharedMonsterAttributes.maxHealth).getModifier(PlayerHandler.moreHealthID).getAmount();
+			stats.healthmod=player.getEntityAttribute(SharedMonsterAttributes.maxHealth).getModifier(PlayerHandler.moreHealthID).getAmount();
 		}
 		catch (Exception e) {
 		}		moreHealthTag.setDouble("healthModifier", stats.healthmod);

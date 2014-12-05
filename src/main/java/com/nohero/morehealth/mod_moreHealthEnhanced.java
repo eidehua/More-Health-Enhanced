@@ -4,22 +4,32 @@ package com.nohero.morehealth;
 import com.nohero.morehealth.Enchantments.ArmorHealthEnchantment;
 import com.nohero.morehealth.EventHandlers.ForgeEventHandler;
 import com.nohero.morehealth.EventHandlers.PlayerHandler;
+import com.nohero.morehealth.GUI.MoreHealthGui;
+import com.nohero.morehealth.GUI.MoreHealthGuiHandler;
 import com.nohero.morehealth.GUI.MoreHealthHUD;
 import com.nohero.morehealth.Items.ItemCursedHeart;
 import com.nohero.morehealth.Items.ItemHeart;
 import com.nohero.morehealth.Items.ItemHeartPiece;
 import cpw.mods.fml.client.FMLClientHandler;
+import cpw.mods.fml.client.event.ConfigChangedEvent;
+import cpw.mods.fml.client.registry.ClientRegistry;
 import cpw.mods.fml.common.FMLCommonHandler;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.EventHandler;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
+import cpw.mods.fml.common.gameevent.InputEvent;
+import cpw.mods.fml.common.network.NetworkRegistry;
 import cpw.mods.fml.common.registry.GameRegistry;
 import cpw.mods.fml.relauncher.Side;
+import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.WeightedRandomChestContent;
@@ -27,15 +37,16 @@ import net.minecraftforge.common.ChestGenHooks;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
+import org.lwjgl.input.Keyboard;
 
-@Mod(modid = mod_moreHealthEnhanced.modid, name = mod_moreHealthEnhanced.name, version = mod_moreHealthEnhanced.version)
+@Mod(modid = mod_moreHealthEnhanced.modid, name = mod_moreHealthEnhanced.name, version = mod_moreHealthEnhanced.version, guiFactory = "com.nohero.morehealth.GUI.MoreHealthGuiFactory")
 public class mod_moreHealthEnhanced{
 	
 	public static final String modid = "morehealth";
 	public static final String name = "More Health Forge";
-	public static final String version = "6.0";
+	public static final String version = "6.2";
 
-	public static final String guiOptions="GUI Options";
+	public static final String guiOptions="gui options";
 	
 	public static int[] LevelRampInt;
 	
@@ -82,21 +93,25 @@ public class mod_moreHealthEnhanced{
 	//Adds my enchantment to the possible enchantments list
 	public static Enchantment armorEnchantment = null;
 
+	@Mod.Instance(modid)
+	public static mod_moreHealthEnhanced instance;
+
+	public static Configuration config;
 	@EventHandler
 	public void  preInit(FMLPreInitializationEvent event) {
 		//Minecraft mc = FMLClientHandler.instance().getClient();
-		setUpConfig(event);
+		config= new Configuration(event.getSuggestedConfigurationFile());
+		// loading the configuration from its file
+		config.load();
+		updateConfig();
 	}
 
 	/**
 	 * Sets up the config for my mod. It's large because I have many options that users can change.
 	 * I set up Properties to be the value from the config file.
-	 * @param event
 	 */
-	private void setUpConfig(FMLPreInitializationEvent event) {
-		Configuration config= new Configuration(event.getSuggestedConfigurationFile());
-		// loading the configuration from its file
-		config.load();
+	private void updateConfig() {
+
 
 		multiplier=config.get(Configuration.CATEGORY_GENERAL, "Heart Item Multiplier", 1.0);
 		multiplier.comment="This is the multiplier for chest heart item loot. Really useful to change on large servers. IF POSSIBLE, CHANGE BEFORE GENERATING WORLD. Multiplier changes only affects newly generated areas.";
@@ -132,7 +147,8 @@ public class mod_moreHealthEnhanced{
 
 		armorEnchantmentID=config.get(Configuration.CATEGORY_GENERAL, "Armor Enchantments ID", 120);
 		armorEnchantmentID.comment="Adjust the Armor Enchants ID in case of a conflict with other custom enchantments";
-		config.save();
+		if(config.hasChanged())
+			config.save();
 	}
 
 	@EventHandler
@@ -143,6 +159,10 @@ public class mod_moreHealthEnhanced{
 			MinecraftForge.EVENT_BUS.register(new MoreHealthHUD(mc));
 		}
 		MinecraftForge.EVENT_BUS.register(new ForgeEventHandler());
+		FMLCommonHandler.instance().bus().register(instance);
+		NetworkRegistry.INSTANCE.registerGuiHandler(instance, new MoreHealthGuiHandler());
+		MoreHealthGui.keyBinding= new KeyBinding("key.hud.desc", Keyboard.KEY_H, "key.morehealth.category");
+		ClientRegistry.registerKeyBinding(MoreHealthGui.keyBinding);
 
 		setUpValuesFromProperties();
 
@@ -151,7 +171,7 @@ public class mod_moreHealthEnhanced{
 			renderCustomGUI=true; //makes sure this is set to true. It's still a custom gui, but a minimal one. 
 		}
 
-		if (RpgMode) {
+		if (!RpgMode) {
 			LevelRampInt = new int[1];
 			LevelRampInt[0] = -1; // stops RPG element
 
@@ -182,6 +202,25 @@ public class mod_moreHealthEnhanced{
 		}
 	}
 
+	/**
+	 * For when a player changes config file in game
+	 * @param eventArgs
+	 */
+	@SubscribeEvent
+	public void onConfigChanged(ConfigChangedEvent.OnConfigChangedEvent eventArgs) {
+		if(eventArgs.modID.equals(modid))
+			updateConfig(); //update our config file
+			setUpValuesFromProperties(); //make in game changes
+	}
+	@SideOnly(Side.CLIENT)
+	@SubscribeEvent
+	public void onKeyEvent(InputEvent.KeyInputEvent event){
+		if(MoreHealthGui.keyBinding.isPressed()){
+			Minecraft mc = FMLClientHandler.instance().getClient();
+			EntityPlayer player = mc.thePlayer;
+			player.openGui(instance, MoreHealthGui.id, mc.theWorld, 0,0,0);
+		}
+	}
 	/**
 	 * I take the properties and make them the types they need to be for me to use.
 	 */

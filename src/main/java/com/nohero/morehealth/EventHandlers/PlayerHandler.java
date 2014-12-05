@@ -45,6 +45,7 @@ public class PlayerHandler {
 
 		double healthModifier=stats.healthmod;
 		addHealthModifier(player, healthModifier);
+
 		//System.out.println("stat: "+ healthModifier);
 		//adds player stats to hash map
 		stats.player = player;
