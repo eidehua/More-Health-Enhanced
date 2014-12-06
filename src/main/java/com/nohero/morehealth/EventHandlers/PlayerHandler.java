@@ -1,5 +1,6 @@
 package com.nohero.morehealth.EventHandlers;
 
+import com.nohero.morehealth.GUI.MoreHealthGui;
 import com.nohero.morehealth.PlayerStats;
 import com.nohero.morehealth.mod_moreHealthEnhanced;
 import cpw.mods.fml.client.FMLClientHandler;
@@ -11,12 +12,14 @@ import cpw.mods.fml.common.network.FMLNetworkEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.event.world.WorldEvent;
+import org.lwjgl.input.Keyboard;
 
 import java.util.Arrays;
 import java.util.UUID;
@@ -52,6 +55,8 @@ public class PlayerHandler {
 		stats.justLoggedIn = true;
 		playerStats.put(player.getCommandSenderName(), stats);
 
+		//When a player logs in, update the player's key bindings.
+		mod_moreHealthEnhanced.updateKeyBindings();
 	}
 
 	public static void addHealthModifier(EntityPlayer player, double healthModifier) {

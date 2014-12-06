@@ -84,6 +84,7 @@ public class mod_moreHealthEnhanced{
 	private static Property customGui;
 	private static Property minimalGui;
 	private static Property armorEnchantmentID;
+	private static Property guiKeyBinding;
 
 	public static AttributeModifier healthMod;
 
@@ -97,6 +98,8 @@ public class mod_moreHealthEnhanced{
 	public static mod_moreHealthEnhanced instance;
 
 	public static Configuration config;
+	private boolean guiOpened=false;
+
 	@EventHandler
 	public void  preInit(FMLPreInitializationEvent event) {
 		//Minecraft mc = FMLClientHandler.instance().getClient();
@@ -147,6 +150,10 @@ public class mod_moreHealthEnhanced{
 
 		armorEnchantmentID=config.get(Configuration.CATEGORY_GENERAL, "Armor Enchantments ID", 120);
 		armorEnchantmentID.comment="Adjust the Armor Enchants ID in case of a conflict with other custom enchantments";
+
+		guiKeyBinding = config.get(Configuration.CATEGORY_GENERAL, "More Health Stats Key", "H");
+		guiKeyBinding.comment = "Set the key you want to use to open up the gui with More Health stats. Supports alphanumeric. WARNING! Will unbind if key was used before!";
+
 		if(config.hasChanged())
 			config.save();
 	}
@@ -161,7 +168,11 @@ public class mod_moreHealthEnhanced{
 		MinecraftForge.EVENT_BUS.register(new ForgeEventHandler());
 		FMLCommonHandler.instance().bus().register(instance);
 		NetworkRegistry.INSTANCE.registerGuiHandler(instance, new MoreHealthGuiHandler());
-		MoreHealthGui.keyBinding= new KeyBinding("key.hud.desc", Keyboard.KEY_H, "key.morehealth.category");
+
+
+		String keyName = guiKeyBinding.getString().toUpperCase();
+		MoreHealthGui.keyBinding= new KeyBinding("key.hud.desc", Keyboard.getKeyIndex(keyName), "key.morehealth.category");
+
 		ClientRegistry.registerKeyBinding(MoreHealthGui.keyBinding);
 
 		setUpValuesFromProperties();
@@ -215,9 +226,11 @@ public class mod_moreHealthEnhanced{
 	@SideOnly(Side.CLIENT)
 	@SubscribeEvent
 	public void onKeyEvent(InputEvent.KeyInputEvent event){
+		Minecraft mc = FMLClientHandler.instance().getClient();
+		EntityPlayer player = mc.thePlayer;
+
 		if(MoreHealthGui.keyBinding.isPressed()){
-			Minecraft mc = FMLClientHandler.instance().getClient();
-			EntityPlayer player = mc.thePlayer;
+
 			player.openGui(instance, MoreHealthGui.id, mc.theWorld, 0,0,0);
 		}
 	}
@@ -237,6 +250,20 @@ public class mod_moreHealthEnhanced{
 		renderCustomGUI=customGui.getBoolean(true);//default heart gui.
 		minimalisticGUI=minimalGui.getBoolean(true); //minimal gui set on default
 		heartArmorEnchantID=armorEnchantmentID.getInt();
+				/*In Keyboard
+		String name = field.getName().substring(4);
+		Aka the fields are "KEY_1" ... "KEY_H"
+		so the key name is just the part without "KEY_"
+		*/
+		String keyName = guiKeyBinding.getString().toUpperCase();
+		int keyIndex = Keyboard.getKeyIndex(keyName);
+		if(MoreHealthGui.keyBinding.getKeyCode()!=keyIndex) {
+			MoreHealthGui.keyBinding.setKeyCode(keyIndex);    //Supports alphanumeric characters
+			KeyBinding.resetKeyBindingArrayAndHash();  		  //Reset all to "free up" old key binding in hash and "add new" key binding in.
+			//When you want to change the key binding, need to reset all key bindings in the hash
+			//The array stores each individual key binding class
+			//Hash stores pairs of ("key", corresp class)
+		}
 	}
 
 	private void addChestLoot() {
@@ -283,7 +310,7 @@ public class mod_moreHealthEnhanced{
         playerTracker = new PlayerHandler();
 		FMLCommonHandler.instance().bus().register(playerTracker);
 		MinecraftForge.EVENT_BUS.register(playerTracker); //for the world unload function
-    }
+	}
 	
 	public int[] convertedStringArray(String[] sarray) throws Exception {
 		if (sarray != null) {
@@ -298,4 +325,15 @@ public class mod_moreHealthEnhanced{
 
 	public static PlayerHandler playerTracker;
 
+	public static void updateKeyBindings() {
+		String keyName = guiKeyBinding.getString().toUpperCase();
+		int keyIndex = Keyboard.getKeyIndex(keyName);
+		if(MoreHealthGui.keyBinding.getKeyCode()!=keyIndex) {
+			MoreHealthGui.keyBinding.setKeyCode(keyIndex);    //Supports alphanumeric characters
+			KeyBinding.resetKeyBindingArrayAndHash();  		  //Reset all to "free up" old key binding in hash and "add new" key binding in.
+			//When you want to change the key binding, need to reset all key bindings in the hash
+			//The array stores each individual key binding class
+			//Hash stores pairs of ("key", corresp class)
+		}
+	}
 }
