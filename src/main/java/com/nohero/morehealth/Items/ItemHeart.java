@@ -23,8 +23,8 @@ public class ItemHeart extends Item
 	public ItemHeart()
 	{
 		super();
-		setUnlocalizedName("heartContainer");
-		setTextureName("morehealth:heartContainer");
+		setUnlocalizedName(mod_moreHealthEnhanced.modid+"_heartContainer");
+		setTextureName(mod_moreHealthEnhanced.modid+":heartContainer");
 		this.setCreativeTab(CreativeTabs.tabMisc);
 		//setMaxStackSize(1);
 		maxStackSize = 64;

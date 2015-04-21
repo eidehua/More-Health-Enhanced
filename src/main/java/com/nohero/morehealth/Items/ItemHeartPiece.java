@@ -1,5 +1,6 @@
 package com.nohero.morehealth.Items;
 
+import com.nohero.morehealth.mod_moreHealthEnhanced;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.renderer.texture.IIconRegister;
@@ -16,8 +17,8 @@ public class ItemHeartPiece extends Item
   {
     super();
     this.setCreativeTab(CreativeTabs.tabMisc);
-	 setTextureName("morehealth:heartPiece");
-	 this.setUnlocalizedName("heartPiece"); //changed with the lang package
+    this.setUnlocalizedName(mod_moreHealthEnhanced.modid+"_heartPiece"); //changed with the lang package
+    setTextureName(mod_moreHealthEnhanced.modid + ":heartPiece");
   }
 
 }

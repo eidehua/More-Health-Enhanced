@@ -160,20 +160,19 @@ public class mod_moreHealthEnhanced{
 
 	@EventHandler
 	public void load(FMLInitializationEvent event) {
+		String keyName = guiKeyBinding.getString().toUpperCase();
+
 		if(FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT )
 		{
 			Minecraft mc = FMLClientHandler.instance().getClient();
 			MinecraftForge.EVENT_BUS.register(new MoreHealthHUD(mc));
+
+			MoreHealthGui.keyBinding= new KeyBinding("key.hud.desc", Keyboard.getKeyIndex(keyName), "key.morehealth.category");
+			ClientRegistry.registerKeyBinding(MoreHealthGui.keyBinding);
 		}
 		MinecraftForge.EVENT_BUS.register(new ForgeEventHandler());
 		FMLCommonHandler.instance().bus().register(instance);
 		NetworkRegistry.INSTANCE.registerGuiHandler(instance, new MoreHealthGuiHandler());
-
-
-		String keyName = guiKeyBinding.getString().toUpperCase();
-		MoreHealthGui.keyBinding= new KeyBinding("key.hud.desc", Keyboard.getKeyIndex(keyName), "key.morehealth.category");
-
-		ClientRegistry.registerKeyBinding(MoreHealthGui.keyBinding);
 
 		setUpValuesFromProperties();
 
@@ -257,13 +256,17 @@ public class mod_moreHealthEnhanced{
 		*/
 		String keyName = guiKeyBinding.getString().toUpperCase();
 		int keyIndex = Keyboard.getKeyIndex(keyName);
-		if(MoreHealthGui.keyBinding.getKeyCode()!=keyIndex) {
-			MoreHealthGui.keyBinding.setKeyCode(keyIndex);    //Supports alphanumeric characters
-			KeyBinding.resetKeyBindingArrayAndHash();  		  //Reset all to "free up" old key binding in hash and "add new" key binding in.
-			//When you want to change the key binding, need to reset all key bindings in the hash
-			//The array stores each individual key binding class
-			//Hash stores pairs of ("key", corresp class)
+		if(FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT ) //Gui is Client only
+		{
+			if(MoreHealthGui.keyBinding.getKeyCode()!=keyIndex) {
+				MoreHealthGui.keyBinding.setKeyCode(keyIndex);    //Supports alphanumeric characters
+				KeyBinding.resetKeyBindingArrayAndHash();  		  //Reset all to "free up" old key binding in hash and "add new" key binding in.
+				//When you want to change the key binding, need to reset all key bindings in the hash
+				//The array stores each individual key binding class
+				//Hash stores pairs of ("key", corresp class)
+			}
 		}
+
 	}
 
 	private void addChestLoot() {
