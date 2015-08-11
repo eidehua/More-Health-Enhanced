@@ -44,7 +44,7 @@ public class mod_moreHealthEnhanced{
 	
 	public static final String modid = "morehealth";
 	public static final String name = "More Health Forge";
-	public static final String version = "6.2";
+	public static final String version = "6.3";
 
 	public static final String guiOptions="gui options";
 	
@@ -225,6 +225,8 @@ public class mod_moreHealthEnhanced{
 	@SideOnly(Side.CLIENT)
 	@SubscribeEvent
 	public void onKeyEvent(InputEvent.KeyInputEvent event){
+		if(FMLCommonHandler.instance().getEffectiveSide() != Side.CLIENT ) //Run on client side only
+			return;
 		Minecraft mc = FMLClientHandler.instance().getClient();
 		EntityPlayer player = mc.thePlayer;
 
@@ -255,9 +257,9 @@ public class mod_moreHealthEnhanced{
 		so the key name is just the part without "KEY_"
 		*/
 		String keyName = guiKeyBinding.getString().toUpperCase();
-		int keyIndex = Keyboard.getKeyIndex(keyName);
 		if(FMLCommonHandler.instance().getEffectiveSide() == Side.CLIENT ) //Gui is Client only
 		{
+			int keyIndex = Keyboard.getKeyIndex(keyName);
 			if(MoreHealthGui.keyBinding.getKeyCode()!=keyIndex) {
 				MoreHealthGui.keyBinding.setKeyCode(keyIndex);    //Supports alphanumeric characters
 				KeyBinding.resetKeyBindingArrayAndHash();  		  //Reset all to "free up" old key binding in hash and "add new" key binding in.
@@ -329,6 +331,9 @@ public class mod_moreHealthEnhanced{
 	public static PlayerHandler playerTracker;
 
 	public static void updateKeyBindings() {
+		if(FMLCommonHandler.instance().getEffectiveSide() != Side.CLIENT ) //Run only on client side
+			return;
+
 		String keyName = guiKeyBinding.getString().toUpperCase();
 		int keyIndex = Keyboard.getKeyIndex(keyName);
 		if(MoreHealthGui.keyBinding.getKeyCode()!=keyIndex) {
