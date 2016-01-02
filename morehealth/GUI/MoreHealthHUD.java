@@ -1,10 +1,13 @@
-package morehealth;
+package com.nohero.morehealth.GUI;
 
 import static net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType.ARMOR;
 
 import java.util.Random;
 
+import com.nohero.morehealth.mod_moreHealthEnhanced;
 import org.lwjgl.opengl.GL11;
+
+import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 
 import net.minecraft.block.material.Material;
 import net.minecraft.client.Minecraft;
@@ -13,7 +16,7 @@ import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.texture.TextureUtil;
 import net.minecraft.entity.SharedMonsterAttributes;
-import net.minecraft.entity.ai.attributes.AttributeInstance;
+//import net.minecraft.entity.ai.attributes.AttributeInstance;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.potion.Potion;
 import net.minecraft.util.MathHelper;
@@ -21,14 +24,14 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.GuiIngameForge;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.ForgeHooks;
-import net.minecraftforge.event.ForgeSubscribe;
+//import net.minecraftforge.event.ForgeSubscribe;
 
-public class MoreHealthGui extends Gui {
+public class MoreHealthHUD extends Gui {
 	
 	private Minecraft mc;
     protected final Random rand = new Random();
 
-	public MoreHealthGui(Minecraft mc) {
+	public MoreHealthHUD(Minecraft mc) {
 		this.mc = Minecraft.getMinecraft();
 
 		// TODO Auto-generated constructor stub
@@ -39,8 +42,8 @@ public class MoreHealthGui extends Gui {
         mc.getTextureManager().bindTexture(res);
     }
 
-	@ForgeSubscribe
-	public void airGUI(RenderGameOverlayEvent.Pre event)
+	@SubscribeEvent
+	public void modifyAirHUD(RenderGameOverlayEvent.Pre event)
 	{
 			if(event==null) return;
 			if(event.type==null) return;
@@ -83,8 +86,8 @@ public class MoreHealthGui extends Gui {
 			}
 	}
 	
-	@ForgeSubscribe
-	public void armorGUI(RenderGameOverlayEvent.Pre event)
+	@SubscribeEvent
+	public void modifyArmorHUD(RenderGameOverlayEvent.Pre event)
 	{
 		if(event==null) return;
 		if(event.type==null) return;
@@ -136,8 +139,8 @@ public class MoreHealthGui extends Gui {
 		}
 	}
 	
-	@ForgeSubscribe
-	public void heartGUI(RenderGameOverlayEvent.Pre evt)
+	@SubscribeEvent
+	public void modifyHealthHUD(RenderGameOverlayEvent.Pre evt)
 	{
 		if(evt==null) return;
 		if(evt.type==null) return;
@@ -148,7 +151,7 @@ public class MoreHealthGui extends Gui {
 			{
 				evt.setCanceled(true);
 				
-		       mc.mcProfiler.startSection("health");
+		       	mc.mcProfiler.startSection("health");
 
 		        boolean highlight = mc.thePlayer.hurtResistantTime / 3 % 2 == 1;
 
@@ -176,12 +179,9 @@ public class MoreHealthGui extends Gui {
 		            regen = mc.ingameGUI.getUpdateCounter() % 25;
 		        }
 		        
-				NBTTagCompound tags = mc.thePlayer.getEntityData();
+				//NBTTagCompound tags = mc.thePlayer.getEntityData();
 				int row= (health-1)/20; // 16/20 (8 hearts) truncates to 0= row 0.[1,20] is included in row 0.
 				//this "row" if off by the displayed row by (-1)
-				//System.out.println(row);
-				//if(health<=20)
-				//{
 		        for (int i = row*10; i < row*10+10; ++i)
 		        {
 		        	//if(mod_moreHealthEnhanced.minimalisticGUI && health>20)
@@ -249,152 +249,7 @@ public class MoreHealthGui extends Gui {
 		            }
 		            
 		        }
-				//}
-//		        //10 to 20
-//				if(health>20 && health <=40)
-//				{
-//		        for (int i = 10; i < 20; ++i)
-//		        {
-//		        	//if(mod_moreHealthEnhanced.minimalisticGUI && health>40)
-//		        	//	break;
-//		        	//if the player has more than 20 hearts (currently), don't render second row!
-//		        	
-//                    if ((i + 1) * 2 > mc.thePlayer.func_110138_aP())
-//						//i+1=hearts *2=health
-//		        	//if(health>20 && health <=40) //only display row 2.
-//    				continue;  //doesn't display empty extra hearts
-//                    
-//		            int idx = i * 2 + 1;
-//		            int iconX = 16;
-//		            if (mc.thePlayer.isPotionActive(Potion.poison)) iconX += 36;
-//		            else if (mc.thePlayer.isPotionActive(Potion.wither)) iconX += 72;
-//
-//					// without changing this, additional hearts above 10 would extend to the right, into the hunger bar. 
-//					//thus, we move it up 9 and left 80 pixels/whatever I presume
-//		            int x = left + i * 8-80;//moves over x left (otherwise hearts continue to the right)
-//		            int y = top-9;//y moves up (one row up)
-//		            
-//		            if(mod_moreHealthEnhanced.minimalisticGUI)
-//		            {
-//		            	// x=left+i*80-80;
-//		            	 y=top;
-//			            if (health <= 4) y = top + rand.nextInt(2);
-//		            }
-//		            else{
-//		            	if (health <= 4) y = top + rand.nextInt(2)-9;
-//		            	//when user gets to critical health, this makes sure the second row "shaking" does not cover the first row
-//		            }
-//		            if (i == regen) y -= 2;
-//
-//		            byte iconY = 0;
-//		            if (mc.theWorld.getWorldInfo().isHardcoreModeEnabled()) iconY = 5;
-//
-//		            drawTexturedModalRect(x, y, 16 + (highlight ? 9 : 0), 9 * iconY, 9, 9);
-//
-//		            if (highlight)
-//		            {
-//		                if (idx < healthLast)
-//		                    drawTexturedModalRect(x, y, iconX + 54, 9 * iconY, 9, 9);
-//		                else if (idx == healthLast)
-//		                    drawTexturedModalRect(x, y, iconX + 63, 9 * iconY, 9, 9);
-//		            }
-//
-//		            if (idx < health)
-//		                drawTexturedModalRect(x, y, iconX + 36, 9 * iconY, 9, 9);
-//		            else if (idx == health)
-//		                drawTexturedModalRect(x, y, iconX + 45, 9 * iconY, 9, 9);
-//		            
-//		            if(mod_moreHealthEnhanced.minimalisticGUI)
-//		            {		            
-//				        String text = "2";
-//				        FontRenderer fontrenderer=mc.fontRenderer;
-//						fontrenderer.drawString(text, colorX + 1, colorY, 0);
-//						fontrenderer.drawString(text, colorX - 1, colorY, 0);
-//			            fontrenderer.drawString(text, colorX, colorY + 1, 0);
-//			            fontrenderer.drawString(text, colorX, colorY - 1, 0);
-//				        fontrenderer.drawString(text, colorX, colorY, 0xf00000, false);
-//	
-//				        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-//				        bind(Gui.field_110324_m);
-//			            //this.mc.renderEngine.bindTexture("/gui/icons.png");
-//		            }
-//		        }
-//				}
-//		        //20 to 30
-//				if(health>40 && health <=60)
-//				{
-//		        for (int i = 20; i < 30; ++i)
-//		        {
-//
-//                    if ((i + 1) * 2 > mc.thePlayer.func_110138_aP())
-//						//i+1=hearts *2=health
-//		        	//if(health>40 && health <=60)
-//    				continue;  //doesn't display empty extra hearts
-//                    
-//		            int idx = i * 2 + 1;
-//		            int iconX = 16;
-//		            if (mc.thePlayer.isPotionActive(Potion.poison)) iconX += 36;
-//		            else if (mc.thePlayer.isPotionActive(Potion.wither)) iconX += 72;
-//
-//					// without changing this, additional hearts above 10 would extend to the right, into the hunger bar. 
-//					//thus, we move it up 9 and left 80 pixels/whatever I presume
-//		            int x = left + i * 8-160;//moves over x left (otherwise hearts continue to the right)
-//		            int y = top-18;//y moves up
-//                    //without -160, hearts would expand to the right (because i is larger)
-//                    //subtracting 160 places third row in the same location as first row.
-//                    //subtracting 16 moves it up 2 rows.
-//		            if(mod_moreHealthEnhanced.minimalisticGUI)
-//		            {
-//		            	 //x=left+i*80-160;
-//		            	 y=top;
-//			            if (health <= 4) y = top + rand.nextInt(2);
-//		            }
-//		            else
-//		            	if (health <= 4) y = top + rand.nextInt(2)-18;
-//		            	//when user gets to critical health, this makes sure the third row "shaking" animation does not cover the first row
-//		          
-//		            
-//		            if (i == regen) y -= 2;
-//
-//		            byte iconY = 0;
-//		            if (mc.theWorld.getWorldInfo().isHardcoreModeEnabled()) iconY = 5;
-//
-//		            drawTexturedModalRect(x, y, 16 + (highlight ? 9 : 0), 9 * iconY, 9, 9);
-//
-//		            if (highlight)
-//		            {
-//		                if (idx < healthLast)
-//		                    drawTexturedModalRect(x, y, iconX + 54, 9 * iconY, 9, 9);
-//		                else if (idx == healthLast)
-//		                    drawTexturedModalRect(x, y, iconX + 63, 9 * iconY, 9, 9);
-//		            }
-//
-//		            if (idx < health)
-//		                drawTexturedModalRect(x, y, iconX + 36, 9 * iconY, 9, 9);
-//		            else if (idx == health)
-//		                drawTexturedModalRect(x, y, iconX + 45, 9 * iconY, 9, 9);
-//		            if(mod_moreHealthEnhanced.minimalisticGUI)
-//		            {
-//				        String text = "3";
-//				        FontRenderer fontrenderer=mc.fontRenderer;
-//						fontrenderer.drawString(text, colorX + 1, colorY, 0);
-//						fontrenderer.drawString(text, colorX - 1, colorY, 0);
-//			            fontrenderer.drawString(text, colorX, colorY + 1, 0);
-//			            fontrenderer.drawString(text, colorX, colorY - 1, 0);
-//				        fontrenderer.drawString(text, colorX, colorY, 0xf00000, false);
-//	
-//				        GL11.glColor4f(1.0F, 1.0F, 1.0F, 1.0F);
-//				        bind(Gui.field_110324_m);
-//			            //this.mc.renderEngine.bindTexture("/gui/icons.png");
-//		            }
-//
-//		        }
-//				}
-
 		        mc.mcProfiler.endSection();
-		        	            
-
-
 			}
 		}
 	}
