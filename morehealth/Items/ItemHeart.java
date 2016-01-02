@@ -43,14 +43,18 @@ public class ItemHeart extends Item
 	   }
 		itemstack.stackSize--;
 		//Need to add in max health feature again later
-/**		if(entityplayer.getMaxHealth()+2>mod_moreHealthEnhanced.MaxHearts*2) //check- in this case, heart container acts as a full heal item
+		if(mod_moreHealthEnhanced.MaxHearts== -1 || mod_moreHealthEnhanced.MaxHearts == 0){
+			//don't do the below check if MaxHearts cap is turned off (-1 or 0)
+		}
+		else if(entityplayer.getMaxHealth()+2>mod_moreHealthEnhanced.MaxHearts*2) //check- in this case, heart container acts as a full heal item
 		{
 			//entityplayer.maxHealth=mod_moreHealthEnhanced.MaxHearts*2;
-			entityplayer.addChatMessage("Your Life is fully replenished!");
+			entityplayer.addChatComponentMessage(new ChatComponentText("Your Life is fully replenished!"));
+			entityplayer.setHealth(entityplayer.getMaxHealth());
+			return itemstack;
 
-		} **/
-		//else //otherwise it acts like a heart container
-		
+		}
+			//otherwise it acts like a heart container
 			//sets max health to be 2 greater than current max health
 			//entityplayer.getEntityAttribute(SharedMonsterAttributes.maxHealth).setAttribute(entityplayer.getMaxHealth()+2);
 			

@@ -1,5 +1,6 @@
 package com.nohero.morehealth.EventHandlers;
 
+import com.nohero.morehealth.GUI.MoreHealthGui;
 import com.nohero.morehealth.PlayerStats;
 import com.nohero.morehealth.mod_moreHealthEnhanced;
 import cpw.mods.fml.client.FMLClientHandler;
@@ -11,12 +12,14 @@ import cpw.mods.fml.common.network.FMLNetworkEvent;
 import cpw.mods.fml.relauncher.Side;
 import cpw.mods.fml.relauncher.SideOnly;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.event.world.WorldEvent;
+import org.lwjgl.input.Keyboard;
 
 import java.util.Arrays;
 import java.util.UUID;
@@ -45,10 +48,15 @@ public class PlayerHandler {
 
 		double healthModifier=stats.healthmod;
 		addHealthModifier(player, healthModifier);
+
 		//System.out.println("stat: "+ healthModifier);
 		//adds player stats to hash map
 		stats.player = player;
+		stats.justLoggedIn = true;
 		playerStats.put(player.getCommandSenderName(), stats);
+
+		//When a player logs in, update the player's key bindings.
+		mod_moreHealthEnhanced.updateKeyBindings();
 	}
 
 	public static void addHealthModifier(EntityPlayer player, double healthModifier) {
@@ -94,7 +102,7 @@ public class PlayerHandler {
 		//changing dimension requires not only a save, but an update-- updates the health modifier, then applies it
 		PlayerHandlerHelper.updatePlayerData(currentPlayer);
 		//System.out.println("Max Health: "+currentPlayer.getMaxHealth());
-		currentPlayer.setHealth(currentPlayer.getMaxHealth());
+		//currentPlayer.setHealth(currentPlayer.getMaxHealth());
 
 		//set variable true so during OnLivingUpdate the user is forced to update the client side health
 		PlayerStats stats = PlayerStats.getPlayerStats(currentPlayer.getCommandSenderName());

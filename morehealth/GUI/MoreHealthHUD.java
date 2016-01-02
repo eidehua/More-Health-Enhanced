@@ -56,7 +56,7 @@ public class MoreHealthHUD extends Gui {
 						event.setCanceled(true);
 					       mc.mcProfiler.startSection("air");
 					        //added
-					        ScaledResolution res = new ScaledResolution(mc.gameSettings, mc.displayWidth, mc.displayHeight);
+					        ScaledResolution res = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
 					        int width = res.getScaledWidth();
 					        int height = res.getScaledHeight();
 					        //
@@ -105,7 +105,7 @@ public class MoreHealthHUD extends Gui {
 					event.setCanceled(true);
 			        mc.mcProfiler.startSection("armor");
 			        //added
-			        ScaledResolution res = new ScaledResolution(mc.gameSettings, mc.displayWidth, mc.displayHeight);
+			        ScaledResolution res = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
 			        int width = res.getScaledWidth();
 			        int height = res.getScaledHeight();
 			        //
@@ -160,7 +160,7 @@ public class MoreHealthHUD extends Gui {
 		            highlight = false;
 		        }
 		        //added
-		        ScaledResolution res = new ScaledResolution(mc.gameSettings, mc.displayWidth, mc.displayHeight);
+		        ScaledResolution res = new ScaledResolution(mc, mc.displayWidth, mc.displayHeight);
 		        int width = res.getScaledWidth();
 		        int height = res.getScaledHeight();
 		        //

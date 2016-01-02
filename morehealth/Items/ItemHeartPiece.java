@@ -17,7 +17,7 @@ public class ItemHeartPiece extends Item
     super();
     this.setCreativeTab(CreativeTabs.tabMisc);
 	 setTextureName("morehealth:heartPiece");
-	 this.setUnlocalizedName("heartPiece");
+	 this.setUnlocalizedName("heartPiece"); //changed with the lang package
   }
 
 }

@@ -4,6 +4,8 @@ import com.nohero.morehealth.PlayerStats;
 import com.nohero.morehealth.mod_moreHealthEnhanced;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.relauncher.Side;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
 import net.minecraft.entity.ai.attributes.IAttributeInstance;
@@ -61,19 +63,154 @@ public class ForgeEventHandler {
 				//update the client side on a dimension change
 				PlayerHandlerHelper.savePlayerData(player, false);
 				PlayerHandlerHelper.updatePlayerData(player);
-				player.setHealth(player.getMaxHealth());
+				player.setHealth(player.getHealth());
 				stats.needClientSideHealthUpdate = false;
+				if(stats.justLoggedIn && stats.loggedOutHealth !=0){
+					//sets up the client side for a player that just logged in (and after loggedOutHealth is grabbed from NBT)
+					//if player doesn't have loggedOutHealth in nbt, it's fine since we don't have to deal with that player's health
+					player.setHealth(stats.loggedOutHealth);
+					stats.justLoggedIn = false;
+
+				}
 				//System.out.println("HO");
 			}
 			/**main logic for rpg heart gain.**/
-			if(mod_moreHealthEnhanced.RpgMode==true){
+			if(mod_moreHealthEnhanced.RpgMode){
 				calculateHeartChange(player, stats);
 			}
+
+			//check player's armor item slots (1-4: Armor)
+			//should work when a player enters (all "oldarmor" = null, then his heart bonus gets set properly)
+			if(side == Side.SERVER && mod_moreHealthEnhanced.Enchantments) {
+				//logic for armor enchantments
+				calculateEnchantmentChanges(player, stats);
+			}
+			//save all changes to NBT and the player's stats data structure
+			saveHeartChange(player, stats);
 
 		}
 	}
 
+	/**
+	 * Looks through a player's current inventory armor comparing it with the previous tick/event's armor.
+	 * Updates the player's health modifiers.
+	 * Need a client side update, so set stats.needClientSideHealthUpdate to be true
+	 * @param player
+	 * @param stats
+	 */
+	private void calculateEnchantmentChanges(EntityPlayer player, PlayerStats stats) {
+		if(stats.needClientSideHealthUpdate){ //prevents race conditions of server thread and client thread.
+			//wait for client side to update before calculating new armor health changes
+			//System.out.println("client update");
+			//return;
+		}
+		if(stats.loggedOutHealth == 0){
+			return; //wait for player to be set up
+		}
+		int armorHealth = 0;
+		for(int i = 1; i <=4; i++){
+			ItemStack currentArmor = player.getEquipmentInSlot(i);
+			ItemStack oldArmor = stats.oldArmorSet[i-1]; //equipmentinslot 1-4 corrspond with oldArmorset 0-3
+
+			double currentMaxHealthMod = 0;
+			try{
+				currentMaxHealthMod=player.getEntityAttribute(SharedMonsterAttributes.maxHealth).getModifier(PlayerHandler.moreHealthID).getAmount();
+			}
+			catch (Exception e) {
+				//don't do enchantment changes until player is loaded in
+				return;
+			}
+			if(oldArmor == currentArmor){
+				//do nothing, armor hasn't changed
+			}
+			else if(currentArmor == null && oldArmor != null){
+				//an armor was unequipped!
+				int extraHearts = EnchantmentHelper.getEnchantmentLevel(mod_moreHealthEnhanced.heartArmorEnchantID, oldArmor);
+				//1 heart = 2 health.
+				if(extraHearts>0) {
+					int extraHealth = extraHearts * 2;
+					//add (-)extraHealth (aka subtract)
+					PlayerHandler.addHealthModifier(player, currentMaxHealthMod-extraHealth);
+					player.addChatComponentMessage(new ChatComponentText("Removing the armor causes the extra " + extraHearts + " enchanted hearts to fade away."));
+					//System.out.println(currentMaxHealthMod+","+extraHealth);
+					//player.addChatComponentMessage(new ChatComponentText("You now have "+ player.getMaxHealth()));
+					stats.needClientSideHealthUpdate = true;
+				}
+
+			}
+			else if(oldArmor == null  && currentArmor != null){
+				//an armor was equipped (when there was nothing before)
+				int extraHearts = EnchantmentHelper.getEnchantmentLevel(mod_moreHealthEnhanced.heartArmorEnchantID, currentArmor);
+				if(extraHearts>0) {
+					int extraHealth = extraHearts *2;
+					PlayerHandler.addHealthModifier(player, currentMaxHealthMod+extraHealth); //changes the health modifier to this new one
+					if(!stats.justLoggedIn) {
+						player.addChatComponentMessage(new ChatComponentText("Equipping the armor binds an extra " + extraHearts + " enchanted hearts to your soul."));
+					}
+					//System.out.println(currentMaxHealthMod+","+extraHealth);
+					//player.addChatComponentMessage(new ChatComponentText("You now have "+ player.getMaxHealth()));
+					stats.needClientSideHealthUpdate = true;
+					armorHealth += extraHealth;
+				}
+			}
+			else{
+				//both are non null, and they are not equal to each other.
+				int oldHealth = 2* EnchantmentHelper.getEnchantmentLevel(mod_moreHealthEnhanced.heartArmorEnchantID, oldArmor);
+				int newHealth = 2* EnchantmentHelper.getEnchantmentLevel(mod_moreHealthEnhanced.heartArmorEnchantID, currentArmor);
+				int healthChange = newHealth - oldHealth;
+				PlayerHandler.addHealthModifier(player,currentMaxHealthMod+healthChange);
+				//Adds the change in health (can be positive and negative)
+				if(healthChange>0){
+					//player overall gained hearts
+					player.addChatComponentMessage(new ChatComponentText("Equipping the stronger new armor binds an extra " + healthChange + " enchanted hearts to your soul."));
+					stats.needClientSideHealthUpdate = true;
+
+				}
+				if(healthChange<0){
+					//player overall lost hearts
+					player.addChatComponentMessage(new ChatComponentText("Equipping the weaker new armor releases an extra " + healthChange + " enchanted hearts."));
+					stats.needClientSideHealthUpdate = true;
+				}
+			}
+			//update old Armor piece to be the current one
+			stats.oldArmorSet[i-1] = currentArmor;
+		}
+		//after checking the armor pieces, if the player net lost health, his max health is updated but his current health is not
+		if(player.getHealth()>player.getMaxHealth()){
+			player.setHealth(player.getMaxHealth());
+		}
+		//If player just logged in
+		if(stats.justLoggedIn){
+			//stats.justLoggedIn = false;
+			//if a player just logged in, set health equal to his loggedOutHealth
+			//System.out.println(armorHealth);
+			//System.out.println(stats.loggedOutHealth);
+			player.setHealth(stats.loggedOutHealth);
+			stats.needClientSideHealthUpdate = true;
+		}
+	}
+
+	/**
+	 * CommandEnchant class
+	 * processCommand method
+	 * This is where an enchant is applied-- I need to grab the item and apply hearts based on the enchantment's enchant level
+	 * itemstack.addEnchantment(enchantment, j); j = enchantment level
+	 * I need to get the enchantment when an enchantment is applied, check if it's an armor health enchantment that is applied
+	 * Then I have to update health based on enchantment level
+	 * I can get the level from getEnchantmentLevel(enchantmentID, itemstack) (since an item(stack) can have more than one enchantment
+	 * I need to update a players health when he EQUIPS or REMOVES a heart enchanted armor-- aka not on CommandEvent
+	 */
 	private void calculateHeartChange(EntityPlayer player, PlayerStats stats) {
+
+		if(mod_moreHealthEnhanced.MaxHearts== -1 || mod_moreHealthEnhanced.MaxHearts == 0){
+			//don't do the below check if MaxHearts cap is turned off (-1 or 0)
+		}
+		else if(player.getMaxHealth()+2>mod_moreHealthEnhanced.MaxHearts*2) //check- in this case, don't continue adding to max health
+		{
+			//CASE: player gets more health through heart container system, so RPG system doesn't exceed the cap
+			return;
+
+		}
 
 		if(levelIncreased(player, stats))
 		{
@@ -108,7 +245,7 @@ public class ForgeEventHandler {
 					stats.count++;				//sets count to the next xp level to gain a heart. Thus, this system deals with death/xp loss easily.
 					//with xp loss, experience became not so good a tracker. However, count will always remain the same.
 			}
-			saveHeartChange(player, stats);
+			//saveHeartChange(player, stats);
 		}
 
 	}
