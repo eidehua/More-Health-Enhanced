@@ -30,12 +30,12 @@ public class ItemHeart extends Item
 		maxStackSize = 64;
 		//this.setCreativeTab(CreativeTabs.tabInventory);
 	}
-	
+
    public ItemStack onItemRightClick(ItemStack itemstack, World world, EntityPlayer entityplayer)
     {
 	   Side side = FMLCommonHandler.instance().getEffectiveSide();
 	   if(side.isClient()) return itemstack;
-	   
+
 	   if(mod_moreHealthEnhanced.HeartContainersAndPieces==false)
 	   {
 		   entityplayer.addChatComponentMessage(new ChatComponentText("Can't use, please turn heart containers on in the config!"));
@@ -54,24 +54,24 @@ public class ItemHeart extends Item
 			return itemstack;
 
 		}
-			//otherwise it acts like a heart container
-			//sets max health to be 2 greater than current max health
-			//entityplayer.getEntityAttribute(SharedMonsterAttributes.maxHealth).setAttribute(entityplayer.getMaxHealth()+2);
-			
-			//no need for try catch, since I add an modifier when player installs.
-			double updatedModifier=2;
-			try{
-			updatedModifier=entityplayer.getEntityAttribute(SharedMonsterAttributes.maxHealth).getModifier(PlayerHandler.moreHealthID).getAmount()+2.0;
-			}
-			catch (Exception e) {
-				// TODO: handle exception
-			}
-			PlayerHandler.addHealthModifier(entityplayer, updatedModifier);
-			//removed code smell
+		//otherwise it acts like a heart container
+		//sets max health to be 2 greater than current max health
+		//entityplayer.getEntityAttribute(SharedMonsterAttributes.maxHealth).setAttribute(entityplayer.getMaxHealth()+2);
 
-			entityplayer.addChatComponentMessage(new ChatComponentText("Your Life has increased by one and is also now fully replenished!"));
-			PlayerStats stats = PlayerStats.getPlayerStats(entityplayer.getCommandSenderName());
-			stats.healthmod=mod_moreHealthEnhanced.healthMod.getAmount();
+		//no need for try catch, since I add an modifier when player installs.
+		double updatedModifier=2;
+		try{
+		updatedModifier=entityplayer.getEntityAttribute(SharedMonsterAttributes.maxHealth).getModifier(PlayerHandler.moreHealthID).getAmount()+2.0;
+		}
+		catch (Exception e) {
+			// TODO: handle exception
+		}
+		PlayerHandler.addHealthModifier(entityplayer, updatedModifier);
+		//removed code smell
+
+		entityplayer.addChatComponentMessage(new ChatComponentText("Your Life has increased by one and is also now fully replenished!"));
+		PlayerStats stats = PlayerStats.getPlayerStats(entityplayer.getCommandSenderName());
+		stats.healthmod=updatedModifier;
 
 		entityplayer.setHealth(entityplayer.getMaxHealth());
 		return itemstack;

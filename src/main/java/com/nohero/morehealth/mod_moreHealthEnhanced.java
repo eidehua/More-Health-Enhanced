@@ -2,6 +2,7 @@ package com.nohero.morehealth;
 
 
 import com.nohero.morehealth.Enchantments.ArmorHealthEnchantment;
+import com.nohero.morehealth.EventHandlers.FMLEventHandler;
 import com.nohero.morehealth.EventHandlers.ForgeEventHandler;
 import com.nohero.morehealth.EventHandlers.PlayerHandler;
 import com.nohero.morehealth.GUI.MoreHealthGui;
@@ -41,15 +42,15 @@ import org.lwjgl.input.Keyboard;
 
 @Mod(modid = mod_moreHealthEnhanced.modid, name = mod_moreHealthEnhanced.name, version = mod_moreHealthEnhanced.version, guiFactory = "com.nohero.morehealth.GUI.MoreHealthGuiFactory")
 public class mod_moreHealthEnhanced{
-	
+
 	public static final String modid = "morehealth";
 	public static final String name = "More Health Forge";
-	public static final String version = "6.3";
+	public static final String version = "6.4 BETA";
 
 	public static final String guiOptions="gui options";
-	
+
 	public static int[] LevelRampInt;
-	
+
 	public static int StartingHearts = 10;
 
 	public static int MaxHearts = -1;
@@ -67,14 +68,14 @@ public class mod_moreHealthEnhanced{
 	private static Item cursedHeart;
 
 	private static double multiply =1.0;
-	public static boolean hcMode=false; 
+	public static boolean hcMode=false;
 	//public static final String modid = "nohero_moreHealth";
-	
+
 	public static boolean renderCustomGUI=true;
 	public static boolean minimalisticGUI=false;
-	
+
 	private static Property startHearts;
-	private static Property maxHearts;	
+	private static Property maxHearts;
 	private static Property levelRamp;
 	private static Property heartItems;
 	private static Property rpg;
@@ -171,14 +172,16 @@ public class mod_moreHealthEnhanced{
 			ClientRegistry.registerKeyBinding(MoreHealthGui.keyBinding);
 		}
 		MinecraftForge.EVENT_BUS.register(new ForgeEventHandler());
+		FMLCommonHandler.instance().bus().register(new FMLEventHandler());
 		FMLCommonHandler.instance().bus().register(instance);
+
 		NetworkRegistry.INSTANCE.registerGuiHandler(instance, new MoreHealthGuiHandler());
 
 		setUpValuesFromProperties();
 
 		if(minimalisticGUI)
 		{
-			renderCustomGUI=true; //makes sure this is set to true. It's still a custom gui, but a minimal one. 
+			renderCustomGUI=true; //makes sure this is set to true. It's still a custom gui, but a minimal one.
 		}
 
 		if (!RpgMode) {
@@ -309,14 +312,12 @@ public class mod_moreHealthEnhanced{
 	 * @param evt
 	 */
 	@EventHandler
-    public void postInit (FMLPostInitializationEvent evt)
-    {
+    public void postInit (FMLPostInitializationEvent evt){
+	    playerTracker = new PlayerHandler();
+			FMLCommonHandler.instance().bus().register(playerTracker);
+			MinecraftForge.EVENT_BUS.register(playerTracker); //for the world unload function
+		}
 
-        playerTracker = new PlayerHandler();
-		FMLCommonHandler.instance().bus().register(playerTracker);
-		MinecraftForge.EVENT_BUS.register(playerTracker); //for the world unload function
-	}
-	
 	public int[] convertedStringArray(String[] sarray) throws Exception {
 		if (sarray != null) {
 			int intarray[] = new int[sarray.length];

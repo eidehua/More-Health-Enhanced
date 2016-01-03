@@ -2,6 +2,7 @@ package com.nohero.morehealth.EventHandlers;
 
 import com.nohero.morehealth.PlayerStats;
 import com.nohero.morehealth.mod_moreHealthEnhanced;
+import ibxm.Player;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.AttributeModifier;
@@ -20,6 +21,12 @@ import java.util.Arrays;
 public class PlayerHandlerHelper {
 	//is it good idea to move these private methods to a helper class? since they are void?
 
+	/**
+	 * Updates health for a config change
+	 * @param player
+	 * @param stats
+	 * @param tags
+	 */
 	public static void updateHealth(EntityPlayer player, PlayerStats stats, NBTTagCompound tags) {
 		NBTTagCompound moreHealthTag = (NBTTagCompound) tags.getTag("MoreHealth 1");
 
@@ -89,12 +96,10 @@ public class PlayerHandlerHelper {
 		//eg if the player updates config with say 10 levels of xp (2 extra hearts) and sets start to 5 hearts, this would happen:
 		//10+4 (stats.start*2+ addHealth); So now this is the player's new maxhealth
 
-		double healthModifier=newMax-20; //in case above, healthModifier is now -6. Minecraft gives player 20-6 health=14 health.
+		//Player.getmaxHealth without my modifer allows me to consider other mods that deal with max health
+		double healthModifier=newMax-player.getMaxHealth(); //in case above, healthModifier is now -6. Minecraft gives player 20-6 health=14 health.
 
-		mod_moreHealthEnhanced.healthMod=new AttributeModifier(PlayerHandler.moreHealthID, "More Health Heart Modifier", healthModifier,0); //note modifier can be negative, as a +0=20 health (10 hearts) start. The player may choose to start at less hearts, so less than 20 health.
-		IAttributeInstance attributeinstance = player.getEntityAttribute(SharedMonsterAttributes.maxHealth);
-        attributeinstance.removeModifier(mod_moreHealthEnhanced.healthMod);
-        attributeinstance.applyModifier(mod_moreHealthEnhanced.healthMod);
+		PlayerHandler.addHealthModifier(player, healthModifier);
 	//	player.getEntityAttribute(SharedMonsterAttributes.maxHealth).setAttribute(stats.hpmax);  //setting hpmax=start*2 will let the update health method below work properly.
 		player.setHealth(player.getMaxHealth());
 
@@ -141,13 +146,11 @@ public class PlayerHandlerHelper {
 //		}
 //		tags.getCompoundTag("MoreHealth").setInteger("hpmax",stats.hpmax);
 
-        double healthModifier=stats.start*2-20;
+		double currentMaxHealth = player.getMaxHealth(); //This allows us to support other mods that affect max health. By default, this should be 20
+        double healthModifier=stats.start*2-currentMaxHealth;
         //if config has starting hearts= 10 (start=10), the healthModifier will be 0.
         //(aka we want minecraft to show 20+0 (base)+(more health modifier).
-		mod_moreHealthEnhanced.healthMod=new AttributeModifier(PlayerHandler.moreHealthID, "More Health Heart Modifier", healthModifier,0); //note modifier can be negative, as a +0=20 health (10 hearts) start. The player may choose to start at less hearts, so less than 20 health.
-		IAttributeInstance attributeinstance = player.getEntityAttribute(SharedMonsterAttributes.maxHealth);
-        attributeinstance.removeModifier(mod_moreHealthEnhanced.healthMod);
-        attributeinstance.applyModifier(mod_moreHealthEnhanced.healthMod);
+		PlayerHandler.addHealthModifier(player, healthModifier);
 
         //initializes the modifier based on starting hearts.
 		stats.count=0;
@@ -182,15 +185,16 @@ public class PlayerHandlerHelper {
 		PlayerStats stats= PlayerStats.getPlayerStats(player.getCommandSenderName());
 		//changing dimensions causes modifiers to reset, so replace it here.
 		double healthModifier=stats.healthmod;
-		mod_moreHealthEnhanced.healthMod=new AttributeModifier(PlayerHandler.moreHealthID, "More Health Heart Modifier", healthModifier,0); //note modifier can be negative, as a +0=20 health (10 hearts) start. The player may choose to start at less hearts, so less than 20 health.
-		IAttributeInstance attributeinstance = player.getEntityAttribute(SharedMonsterAttributes.maxHealth);
-        attributeinstance.removeModifier(mod_moreHealthEnhanced.healthMod);
-        attributeinstance.applyModifier(mod_moreHealthEnhanced.healthMod);
-
+		PlayerHandler.addHealthModifier(player, healthModifier);
     	//player.setHealth(player.getMaxHealth());
 
 	}
 
+	/**
+	 * Updates my mod's data in NBT
+	 * @param player
+	 * @param loggedOut
+	 */
 	public static void savePlayerData(EntityPlayer player, boolean loggedOut) {
 		// TODO Auto-generated method stub
 		PlayerStats stats = PlayerStats.getPlayerStats(player.getCommandSenderName());
