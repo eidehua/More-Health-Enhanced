@@ -11,7 +11,7 @@ public class PlayerStats {
 
 	public  int[] LevelArray;
 	public  int start;
-	public  int hpmax; //tracks max health of each player
+	public  int hpmax; //tracks max health of each player -- seems to be unused now
 	public  int count; //tracks current position in LevelRamp array.
 	public 	int previousLevel; //previous exp lvl of player.
 	public double healthmod; //used when a player's health modifier is lost (on respawn or login or change dim)
@@ -20,6 +20,7 @@ public class PlayerStats {
 	public ItemStack[] oldArmorSet = new ItemStack[4];	//the armor equipped on user when stats are saved
 	public boolean justLoggedIn;
 	public float loggedOutHealth;
+	public int heartContainers; //tracks how many heartContainers used
 
 	public static PlayerStats getPlayerStats(String username) {
 		// TODO Auto-generated method stub

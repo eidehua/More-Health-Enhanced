@@ -72,7 +72,7 @@ public class ItemHeart extends Item
 		entityplayer.addChatComponentMessage(new ChatComponentText("Your Life has increased by one and is also now fully replenished!"));
 		PlayerStats stats = PlayerStats.getPlayerStats(entityplayer.getCommandSenderName());
 		stats.healthmod=updatedModifier;
-
+		stats.heartContainers++;
 		entityplayer.setHealth(entityplayer.getMaxHealth());
 		return itemstack;
   }

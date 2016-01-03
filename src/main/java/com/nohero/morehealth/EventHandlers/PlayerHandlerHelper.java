@@ -33,14 +33,14 @@ public class PlayerHandlerHelper {
 		if(stats.start!= mod_moreHealthEnhanced.StartingHearts) //deals with the case of an existing user CHANGING the config file.
 		{
 			stats.start=mod_moreHealthEnhanced.StartingHearts;
-			player.addChatComponentMessage(new ChatComponentText("Starting Hearts sucessfully changed!"));
+			player.addChatComponentMessage(new ChatComponentText("Starting Hearts successfully changed!"));
 			moreHealthTag.setInteger("start", stats.start);
 		}
 		if(!Arrays.equals(stats.LevelArray, mod_moreHealthEnhanced.LevelRampInt))
 		//when you start up the game, levelarray gets reset (its hard to save this variable for now) but nothing should really change.
 		{
 			stats.LevelArray=mod_moreHealthEnhanced.LevelRampInt;
-			player.addChatComponentMessage(new ChatComponentText("Level Ramp sucessfully changed!"));
+			player.addChatComponentMessage(new ChatComponentText("Level Ramp successfully changed!"));
 			moreHealthTag.setIntArray("LevelArray", stats.LevelArray);
 		}
 		stats.hpmax=stats.start*2;
@@ -57,47 +57,25 @@ public class PlayerHandlerHelper {
 
 		player.setHealth(player.getMaxHealth());
 
-		if(mod_moreHealthEnhanced.RpgMode==false)
+		if(!mod_moreHealthEnhanced.RpgMode)
 		{
 			player.addChatComponentMessage(new ChatComponentText("Heart Container mode enable!"));
 			return;
 		}
 
 		//allows start to update and hp max to update, but stops the array.
-		stats.count=0;
-		int addHealth=0;
-		for(int i=0;i<mod_moreHealthEnhanced.LevelRampInt.length;i++) //only for first run though, aka hearts are retained after death.
-		{
-			if(player.experienceLevel>=mod_moreHealthEnhanced.LevelRampInt[i])// && mod_moreHealthEnhanced.hpmax==start*2) redundant code, hpmax set to start*2
-			{ //levemrampint[i] is the actual level, while i itself is the array position
-				stats.count++; //if explevel is 1, and levelrampint[0] is 1, then the if statement occurs. The count should increase in this process.
-				//thus, when the player levels to 2 and levelrampint[1] is 2, increaselevel works and the update is applies.
-				addHealth+=2;
-			}
-			else
-			break; //breaks out
-		}
 		stats.hpmax=stats.start*2;
-		if(mod_moreHealthEnhanced.MaxHearts==-1 || mod_moreHealthEnhanced.MaxHearts==0)
-		{
-			//no cap means don't mess with the variable addHealth (the total modifier from starting health can be infinite)
-		}
-		else
-		{
-			if(addHealth>mod_moreHealthEnhanced.MaxHearts*2) //check
-			addHealth=mod_moreHealthEnhanced.MaxHearts*2;
-		}
 		moreHealthTag.setInteger("hpmax", stats.hpmax);
 
-
-		//healthModifier=stats.hpmax-20; //with the now updated hpmax
-		double newMax=stats.start*2+addHealth;
+		//stats.count=0;
+		double newMax = calculateTotalMoreHealthContribution(player, stats);
 		//newMax calculates the player's starting health+ extra health from xp system.
 		//eg if the player updates config with say 10 levels of xp (2 extra hearts) and sets start to 5 hearts, this would happen:
-		//10+4 (stats.start*2+ addHealth); So now this is the player's new maxhealth
+		//10+4 (stats.start*2+ rpgHealth); So now this is the player's new maxhealth
 
-		//Player.getmaxHealth without my modifer allows me to consider other mods that deal with max health
-		double healthModifier=newMax-player.getMaxHealth(); //in case above, healthModifier is now -6. Minecraft gives player 20-6 health=14 health.
+		//My modifier should be based on the default of minecraft (20) and not accounting other mods
+		//EG if my mod wants to add 2 health, and I set starting hearts = 20, should be a modifier of +2, should be 22-20
+		double healthModifier=newMax-20; //EG: health from my mod says we want 24 health. Default + other mod says 22. So my modifier should be (24-22 = 2), to make 24 = 22 + 2
 
 		PlayerHandler.addHealthModifier(player, healthModifier);
 	//	player.getEntityAttribute(SharedMonsterAttributes.maxHealth).setAttribute(stats.hpmax);  //setting hpmax=start*2 will let the update health method below work properly.
@@ -126,28 +104,61 @@ public class PlayerHandlerHelper {
 			stats.healthmod=player.getEntityAttribute(SharedMonsterAttributes.maxHealth).getModifier(PlayerHandler.moreHealthID).getAmount();
 		}
 		catch (Exception e) {
-		}		moreHealthTag.setDouble("healthModifier", stats.healthmod);
+		}
+		moreHealthTag.setDouble("healthModifier", stats.healthmod);
 
+	}
+
+	/**
+	 * Calculates the max health using my mod only. Say start at 3 hearts.
+	 * 6 + 2 + 2+ 2 = 12
+	 * Default health = 20
+	 * modifier for my mod = 12 - 20 = -8
+	 * If my mod wants 22 max health.
+	 * If the default is 20, and another mod gave 2 health.
+	 * I shouldn't be doing 22-22, I should be doing 22-20.
+	 * @param player
+	 * @param stats
+	 * @return
+	 */
+	public static double calculateTotalMoreHealthContribution(EntityPlayer player, PlayerStats stats) {
+		int rpgHealth=0;
+		for(int i=0;i< mod_moreHealthEnhanced.LevelRampInt.length;i++) //only for first run though, aka hearts are retained after death.
+		{
+			if(player.experienceLevel>=mod_moreHealthEnhanced.LevelRampInt[i])// && mod_moreHealthEnhanced.hpmax==start*2) redundant code, hpmax set to start*2
+			{ //levemrampint[i] is the actual level, while i itself is the array position
+				//stats.count++; //if explevel is 1, and levelrampint[0] is 1, then the if statement occurs. The count should increase in this process.
+				//thus, when the player levels to 2 and levelrampint[1] is 2, increaselevel works and the update is applies.
+				rpgHealth+=2;
+			}
+			else
+			break; //breaks out
+		}
+		if(mod_moreHealthEnhanced.MaxHearts==-1 || mod_moreHealthEnhanced.MaxHearts==0)
+		{
+			//no cap means don't mess with the variable rpgHealth (the total modifier from starting health can be infinite)
+		}
+		else
+		{
+			if(rpgHealth>mod_moreHealthEnhanced.MaxHearts*2) //check
+			rpgHealth=mod_moreHealthEnhanced.MaxHearts*2;
+		}
+
+		int extraHearts = 0;
+		for(int i =0; i<stats.oldArmorSet.length; i++){
+			extraHearts+= EnchantmentHelper.getEnchantmentLevel(mod_moreHealthEnhanced.heartArmorEnchantID, stats.oldArmorSet[i]);
+		}
+		double armorHealth = extraHearts * 2;
+		double heartContainerHealth = stats.heartContainers * 2;
+		return stats.start*2+rpgHealth+armorHealth + heartContainerHealth;
 	}
 
 	static void setupFirstTime(EntityPlayer player, NBTTagCompound tags, PlayerStats stats) {
 		stats.start=mod_moreHealthEnhanced.StartingHearts;
 		stats.LevelArray=mod_moreHealthEnhanced.LevelRampInt;
 
-//		stats.hpmax=stats.start*2;
-//		if(mod_moreHealthEnhanced.MaxHearts==-1 || mod_moreHealthEnhanced.MaxHearts==0)
-//		{
-//			//no cap means don't deal with maxhp
-//		}
-//		else
-//		{
-//			if(stats.hpmax>mod_moreHealthEnhanced.MaxHearts*2) //check
-//				stats.hpmax=mod_moreHealthEnhanced.MaxHearts*2;
-//		}
-//		tags.getCompoundTag("MoreHealth").setInteger("hpmax",stats.hpmax);
-
-		double currentMaxHealth = player.getMaxHealth(); //This allows us to support other mods that affect max health. By default, this should be 20
-        double healthModifier=stats.start*2-currentMaxHealth;
+		//20 is default minecraft maxHealth
+        double healthModifier=stats.start*2-20;
         //if config has starting hearts= 10 (start=10), the healthModifier will be 0.
         //(aka we want minecraft to show 20+0 (base)+(more health modifier).
 		PlayerHandler.addHealthModifier(player, healthModifier);
@@ -177,6 +188,7 @@ public class PlayerHandlerHelper {
 		moreHealthTag.setInteger("count", stats.count);
 		moreHealthTag.setInteger("previousLevel", stats.previousLevel);
 		moreHealthTag.setDouble("healthModifier", stats.healthmod);
+		moreHealthTag.setInteger("heartContainers", stats.heartContainers);
 		//after save, update player health
 		updateHealth(player, stats, tags);
 	}
@@ -253,6 +265,7 @@ public class PlayerHandlerHelper {
 				//PlayerHandler.addHealthModifier(player, currentMaxHealthMod);
 				moreHealthTag.setDouble("healthModifier", currentMaxHealthMod);	//store the healthModifier change
 				moreHealthTag.setFloat("loggedOutHealth", player.getHealth());
+				moreHealthTag.setInteger("heartContainers", stats.heartContainers);
 				PlayerHandler.playerStats.remove(player.getCommandSenderName());
 			}
 		}
@@ -290,5 +303,6 @@ public class PlayerHandlerHelper {
 		stats.healthmod=moreHealthTag.getDouble("healthModifier");
 		stats.loggedOutHealth = moreHealthTag.getFloat("loggedOutHealth"); //tag used to keep track of a player health on log out
 		//System.out.println(moreHealthTag.getDouble("healthModifier"));
+		stats.heartContainers = moreHealthTag.getInteger("heartContainers");
 	}
 }
